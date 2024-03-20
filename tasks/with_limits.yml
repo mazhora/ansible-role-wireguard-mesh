@@ -1,0 +1,97 @@
+---
+- name: Gather facts from wg servers ( for play with limit )
+  ansible.builtin.setup:
+  when: ansible_limit is defined
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  loop: "{{ groups[wireguard_group] }}"
+
+- name: Install wireguard (apt)
+  apt:
+    update_cache: yes
+    state: present
+    name: wireguard
+
+- name: Ensure wireguard_path exists as directory
+  file:
+    path: "{{ wireguard_path }}"
+    state: directory
+
+- name: Read private key
+  tags: test
+  stat:
+    path: "{{ wireguard_path }}/{{ wireguard_network_name }}_privatekey"
+  register: privatekey
+
+- name: Generate wireguard keys
+  tags: test
+  shell: set -o pipefail && \
+         umask 077; wg genkey | tee {{ wireguard_path  }}/{{ wireguard_network_name }}_privatekey | wg pubkey > {{ wireguard_path }}/{{ wireguard_network_name }}_publickey
+  args:
+    executable: /bin/bash
+  when:
+    - not privatekey.stat.exists
+
+- name: Read private key
+  tags: test
+  slurp:
+    src: "{{ wireguard_path }}/{{ wireguard_network_name }}_privatekey"
+  register: private
+
+- name: Read public key
+  delegate_to: "{{ item }}"
+  loop: "{{ groups[wireguard_group] }}"
+  tags: test
+  ignore_errors: true
+  slurp:
+    src: "{{ wireguard_path }}/{% if hostvars[item].wireguard_network_name is defined %}{{ hostvars[item].wireguard_network_name }}{% else %}{{ wireguard_network_name}}{% endif %}_publickey"
+  register: public
+
+- name: Patch wg-quick service
+  copy:
+    dest: "/lib/systemd/system/wg-quick@.service"
+    src: wg-quick@.service
+  notify:
+    - daemon-reload
+
+- name: Patch wg-quick
+  copy:
+    dest: "/usr/bin/wg-quick"
+    src: wg-quick
+
+- name: Generate configs (first time)
+  tags: test
+  template:
+    src: interface_limit.conf.j2
+    dest: "{{ wireguard_path }}/{{ wireguard_network_name }}.conf"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  notify:
+    - Enable wg-quick service
+    - Restart wg-quick service
+  when:
+    - not privatekey.stat.exists
+
+- name: Generate configs (update)
+  tags: test
+  template:
+    src: interface_limit.conf.j2
+    dest: "{{ wireguard_path }}/{{ wireguard_network_name }}.conf"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o=r"
+  notify:
+    - Reload wg-quick service
+  when:
+    - privatekey.stat.exists
+
+- name: Generate supernets configs
+  template:
+    src: supernets.j2
+    dest: "{{ wireguard_path }}/{{ wireguard_network_name }}_supernets"
+    owner: root
+    group: root
+    mode: "u=rw,g=r,o="
+  notify:
+    - Reload wg-quick service

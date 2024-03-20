@@ -1,0 +1,3 @@
+{% for net in wireguard_supernets %}
+{{ net }} src {{ vars[wireguard_ip_address_var] }}
+{% endfor %}

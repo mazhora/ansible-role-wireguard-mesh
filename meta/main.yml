@@ -5,7 +5,7 @@ galaxy_info:
   role_name: wireguard-mesh
   author: mazhora
   description: WireGuard mesh network.
-  license: "BSD-3-Clause"
+  license: "license (BSD, MIT)"
   min_ansible_version: 2.10
   platforms:
     - name: Ubuntu

@@ -1,0 +1,8 @@
+---
+- name: Play without limits
+  include_tasks: "without_limits.yml"
+  when: ansible_limit is undefined
+
+- name: Play with limits
+  include_tasks: "with_limits.yml"
+  when: ansible_limit is defined

@@ -1,0 +1,30 @@
+[Interface]
+Address = {{ vars[wireguard_ip_address_var] }}
+PrivateKey = {{ private.content | b64decode | trim }}
+ListenPort = {% if node_wireguard_port is defined %}{{ node_wireguard_port }}{% else %}{{ wireguard_port }}{% endif +%}
+{% if wireguard_mtu is defined %}
+MTU = {{ wireguard_mtu }}
+{% endif %}
+{% if client_wireguard_dns is defined %}
+DNS = {{ client_wireguard_dns }}
+{% endif %}
+
+{% for node in groups[wireguard_group] %}
+{% if inventory_hostname != hostvars[node]['inventory_hostname'] %}
+{% for i in public.results %}
+{% if i.item == node %}
+{% if i.content is defined and hostvars[node][wireguard_ip_address_var] is defined %}
+[Peer]
+# friendly_name = {{ hostvars[node]['inventory_hostname']  }}
+PublicKey = {{ i.content | b64decode | trim }}
+AllowedIPs = {{ hostvars[node][wireguard_ip_address_var] }}
+Endpoint = {{ hostvars[node]['public_addr'] | default(hostvars[node]['ansible_host']) | default(hostvars[node]['inventory_hostname']) }}:{% if hostvars[node].node_wireguard_port is defined %}{{ hostvars[node].node_wireguard_port }}{% else %}{{ wireguard_port }}{% endif +%}
+{% if hostvars[node].wg_keepalive is defined %}
+PersistentKeepalive = {{ hostvars[node].wg_keepalive }}
+{% endif %}
+
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}

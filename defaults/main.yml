@@ -1,0 +1,11 @@
+---
+wireguard_port: "51820"
+wireguard_path: "/etc/wireguard"
+
+wireguard_network_name: "wg0"
+
+wireguard_group: "wireguard"
+
+wireguard_ip_address_var: "wg_ip_address"
+
+wireguard_supernets: []
