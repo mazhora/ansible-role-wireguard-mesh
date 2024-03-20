@@ -1,0 +1,20 @@
+---
+dependencies: []
+
+galaxy_info:
+  role_name: wireguard-mesh
+  author: mazhora
+  description: WireGuard mesh network.
+  license: "BSD-3-Clause"
+  min_ansible_version: 2.10
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+  galaxy_tags:
+    - system
+    - mesh
+    - wireguard
+    - vpn
+    - server
