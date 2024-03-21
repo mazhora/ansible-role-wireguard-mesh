@@ -18,13 +18,11 @@
     state: directory
 
 - name: Read private key
-  tags: test
   stat:
     path: "{{ wireguard_path }}/{{ wireguard_network_name }}_privatekey"
   register: privatekey
 
 - name: Generate wireguard keys
-  tags: test
   shell: set -o pipefail && \
          umask 077; wg genkey | tee {{ wireguard_path  }}/{{ wireguard_network_name }}_privatekey | wg pubkey > {{ wireguard_path }}/{{ wireguard_network_name }}_publickey
   args:
@@ -33,7 +31,6 @@
     - not privatekey.stat.exists
 
 - name: Read private key
-  tags: test
   slurp:
     src: "{{ wireguard_path }}/{{ wireguard_network_name }}_privatekey"
   register: private
@@ -41,8 +38,6 @@
 - name: Read public key
   delegate_to: "{{ item }}"
   loop: "{{ groups[wireguard_group] }}"
-  tags: test
-  ignore_errors: true
   slurp:
     src: "{{ wireguard_path }}/{% if hostvars[item].wireguard_network_name is defined %}{{ hostvars[item].wireguard_network_name }}{% else %}{{ wireguard_network_name}}{% endif %}_publickey"
   register: public
@@ -60,7 +55,6 @@
     src: wg-quick
 
 - name: Generate configs (first time)
-  tags: test
   template:
     src: interface_limit.conf.j2
     dest: "{{ wireguard_path }}/{{ wireguard_network_name }}.conf"
@@ -74,7 +68,6 @@
     - not privatekey.stat.exists
 
 - name: Generate configs (update)
-  tags: test
   template:
     src: interface_limit.conf.j2
     dest: "{{ wireguard_path }}/{{ wireguard_network_name }}.conf"
