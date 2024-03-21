@@ -24,11 +24,13 @@
     - not privatekey.stat.exists
 
 - name: Read private key
+  any_errors_fatal: true
   slurp:
     src: "{{ wireguard_path }}/{{ wireguard_network_name }}_privatekey"
   register: private
 
 - name: Read public key
+  any_errors_fatal: true
   slurp:
     src: "{{ wireguard_path }}/{{ wireguard_network_name }}_publickey"
   register: public
