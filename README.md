@@ -47,6 +47,12 @@ The variables you can use are detailed below, including their default settings (
 - List of subnets for which traffic will be routed into the mesh network.
 - Default value: `[]`
 
+### `wireguard_public_addr`
+
+- If your host is behind a NAT, you can determine its public address with this variable.
+- Default value: `undefine`
+
+
 ## Dependencies
 
 None.
